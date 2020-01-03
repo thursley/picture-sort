@@ -161,7 +161,7 @@ class PictureManager:
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("usage: " + sys.argv[0] + " SOURCEPATH [TARGETPATH]")
-        return
+        exit()
 
     sourcePath = sys.argv[1]
     if len(sys.argv) < 3:
