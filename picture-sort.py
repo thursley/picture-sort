@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
     if not os.path.isdir(sourcePath) or not os.path.isdir(targetPath):
         print("error: source and target have to be existing directories")
-        return
+        exit()
 
     pm = PictureManager(sourcePath, targetPath)
     ans = input("rename pictures (date/time tag)? (Y/n)")
