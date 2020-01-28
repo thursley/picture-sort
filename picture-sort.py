@@ -24,6 +24,8 @@ class PictureManager:
     def __init__(self, source, target):
         self.sourcepath = source
         self.targetpath = target
+        self.quiet = False
+        self.force = False
         if not self.sourcepath.endswith('/'):
             self.sourcepath += ('/')
         if not self.targetpath.endswith('/'):
@@ -37,7 +39,7 @@ class PictureManager:
             shutil.copyfile(self.sourcepath + filename, self.targetpath + datename)
             
     def moveRenamed(self):
-        moveall = False
+        moveall = self.force
         noall = False
         for filename in [f for f in os.listdir(self.sourcepath) if not os.path.isdir(self.sourcepath + f)] :
             try:
@@ -73,7 +75,8 @@ class PictureManager:
                 if not os.path.isdir(folderpath):
                     os.mkdir(folderpath)
                 if os.path.isfile(folderpath + filename):
-                    print("will not copy " + filename + ": file exists in target folder")
+                    if not self.quiet: 
+                        print("will not copy " + filename + ": file exists in target folder")
                     continue
                 shutil.copyfile(self.sourcepath + filename, folderpath + filename)
             except Exception as ex:
@@ -81,12 +84,13 @@ class PictureManager:
                 continue
             
     def moveSorted(self):
-        for filename in os.listdir(self.sourcepath):
+        for filename in os.listdir(self.targetpath):
             try:
                 if os.path.isdir(self.sourcepath + filename):
                     continue
                 if PictureManager.isResponsible(filename):
-                    print("processing " + filename + "... ", end='')  
+                    if not self.quiet:
+                        print("processing " + filename + "... ", end='')  
                     folderpath = self.targetpath + PictureManager\
                         .folderDateName(self.sourcepath + filename) + '/'
                     if not folderpath:
@@ -94,12 +98,15 @@ class PictureManager:
                     if not os.path.isdir(folderpath):
                         os.mkdir(folderpath)
                     if os.path.isfile(folderpath + filename):
-                        print("abort: " + ": file exists in target folder (" + folderpath + ")")
+                        if not self.quiet:
+                            print("abort: " + ": file exists in target folder (" + folderpath + ")")
                         continue
                     shutil.move(self.sourcepath + filename, folderpath + filename)
-                    print("done.")
+                    if not self.quiet:
+                        print("done.")
                 else:
-                	print("skipping " + filename + ".")
+                    if not self.quiet:
+                	    print("skipping " + filename + ".")
             except Exception as ex:
                 try:
                    print("failed: " + str(ex))
@@ -109,7 +116,8 @@ class PictureManager:
             
     @staticmethod
     def isResponsible(filename):
-        return filename.lower().endswith(".jpg") \
+        return filename.lower().endswith(".jpg")  \
+            or filename.lower().endswith(".jpeg") \
             or filename.lower().endswith(".mov")
                     
         
@@ -162,6 +170,9 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("usage: " + sys.argv[0] + " SOURCEPATH [TARGETPATH]")
         exit()
+    
+    force = False
+    quiet = False
 
     sourcePath = sys.argv[1]
     if len(sys.argv) < 3:
@@ -169,17 +180,33 @@ if __name__ == '__main__':
     else:
         targetPath = sys.argv[2]
 
-    if not os.path.isdir(sourcePath) or not os.path.isdir(targetPath):
-        print("error: source and target have to be existing directories")
+    if "--force" in sys.argv:
+        force = True
+
+    if "--quiet" in sys.argv:
+        quiet = True
+
+    if not os.path.isdir(sourcePath) :
+        print("error: source '" + sourcePath + "'has to be existing directories")
         exit()
 
+    if  not os.path.isdir(targetPath):
+        print("error: target has to be existing directories")
+        exit()
+
+
     pm = PictureManager(sourcePath, targetPath)
-    ans = input("rename pictures (date/time tag)? (Y/n)")
-    if ans == "" or ans.lower() == "y":
+    pm.force = force
+    pm.quiet = quiet
+
+    if not force:
+        ans = input("rename pictures (date/time tag)? (Y/n)")
+    if force or ans == "" or ans.lower() == "y":
         pm.moveRenamed()
-        
-    ans = input("sort pictures? (Y/n)")
-    if ans == "" or ans.lower() == "y":
+    
+    if not force:
+        ans = input("sort pictures? (Y/n)")
+    if force or ans == "" or ans.lower() == "y":
         pm.moveSorted()
         
         
