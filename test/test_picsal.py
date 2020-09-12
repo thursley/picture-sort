@@ -87,4 +87,31 @@ class TestTimeRange(unittest.TestCase):
         self.assertFalse(end + dt.timedelta(seconds=1) in rng)
 
     def test_overlaps(self):
-        self.assertFalse(True9)
+        start1 = dt.datetime(2020, 9, 10, 12, 0, 0)
+        end1 = dt.datetime(2020, 9, 10, 13, 0, 0)
+
+        start2 = dt.datetime(2020, 9, 10, 10, 0, 0)
+        end2 = dt.datetime(2020, 9, 10, 12, 30, 0)
+
+        start3 = dt.datetime(2020, 9, 10,12,15)
+        end3 = dt.datetime(2020, 9, 10,12,45)
+
+        start4 = dt.datetime(2019, 9,10)
+        end4 = dt.datetime(2019, 12, 1, 0, 0, 0)
+
+        range1 = picsal.TimeRange(start1, end1)
+        range2 = picsal.TimeRange(start2, end2)
+        range3 = picsal.TimeRange(start3, end3)
+        range4 = picsal.TimeRange(start4, start1)
+        range5 = picsal.TimeRange(start4, end4)
+
+        self.assertTrue(range1.overlaps(range1))
+        self.assertTrue(range1.overlaps(range2))
+        self.assertTrue(range2.overlaps(range1))
+        self.assertTrue(range3.overlaps(range1))
+        self.assertTrue(range1.overlaps(range3))
+        
+        self.assertFalse(range1.overlaps(range4))
+        self.assertFalse(range4.overlaps(range1))
+        self.assertFalse(range5.overlaps(range1))
+        self.assertFalse(range1.overlaps(range5))
