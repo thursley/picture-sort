@@ -19,7 +19,7 @@ class TimeRange:
 
     def overlaps(self, other: 'TimeRange'):
         return ((self.__start <= other.__start and self.__end > other.__start)
-               or other.overlaps(self))
+               or other.__start <= self.__start and other.__end > self.__start)
 
 class Category:
     __name: str
