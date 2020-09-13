@@ -1,10 +1,8 @@
 import exif
 import datetime as dt
 import os
+import shutil
 from typing import Dict, List
-
-# TODO:
-# {category: [timerange1, timerange2, ...]}
 
 class TimeRange:
     __start: dt.datetime
@@ -66,7 +64,7 @@ def get_exif_datetime(path: str) -> dt.datetime:
     isotime = '-'.join([date, time])
     return dt.datetime.fromtimestamp(isotime)
 
-def create_filename(old_filename: str, time: dt.datetime, config: Dict[str, str]) -> str:
+def create_filename(old_filename: str, time: dt.datetime, config: {}) -> str:
     old_name, extension = os.path.splitext(old_filename)
     filename: str = ''
     if config.get('prepend_timestamp', 'false') == 'true':
@@ -95,14 +93,66 @@ def get_files(directory: str, config: {}) -> List[str]:
     return [filename for filename in os.listdir(directory) 
                 if os.path.splitext(filename)[1] in extensions]
 
-def create_target_dir_name(file: File, ranges: List[TimeRange], config: Dict[str, str]):
+def create_target_dir_name(time: dt.datetime, ranges: List[TimeRange], config: {}) -> str:
     target_path = ''
     for range in ranges:
-        if file.get_date() in range:
+        if time in range:
             target_path = range.get_name()
             break
 
     if not target_path:
-        target_path = f'{file.get_date().year:04}-{file.get_date().month:02}'
+        target_path = f'{time.year:04}-{time.month:02}'
 
-    target_path = '/'.join([config['target_path'], target_path])        
+    target_path = os.path.join(config['target_dir'], target_path) 
+    return target_path
+
+def get_files_recurse(dir: str, extensions: List[str]) -> List[str]:
+    if not os.path.isdir(dir):
+        raise Exception(f"'{dir} is not a directory")
+
+    files: List[str] = []
+
+    for elem in os.listdir(dir):
+        if os.path.isdir(elem):
+            files += get_files_recurse(os.path.join(dir, elem), extensions)
+        elif os.path.splitext(elem)[1] in extensions:
+            files.append(os.path.join(dir, elem))
+
+    return files
+
+
+if __name__ == "__main__":
+    config = {
+        'prepend_timestamp': 'true',
+        'keep_filename' : 'false',
+        'target_dir' : '',
+        'source_dir' : '',
+        'extensions' : ['.jpg', '.jpeg', '.JPG', '.JPEG']}
+
+    files = get_files_recurse(config.get('source_dir', ''), config.get('extensions', []))
+
+    for source in files:
+        time: dt.datetime = (
+            get_exif_datetime(source) or 
+            dt.datetime.fromtimestamp(os.path.getctime(source)))
+
+        target_name = create_filename(os.path.basename(source), time, config)
+        target_dir = create_target_dir_name(time, [], config)
+        target_dir = os.path.join(config['target_path'], target_dir)
+        if not os.path.exists(target_dir):
+            os.mkdir(target_dir)
+
+        target = os.path.join(target_dir, target_name)
+        if os.path.exists(target):
+            continue
+
+        shutil.copy(source, target)
+
+
+
+
+
+        
+
+    
+
