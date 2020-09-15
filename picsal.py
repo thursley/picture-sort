@@ -57,12 +57,10 @@ class File:
 def get_exif_datetime(path: str) -> dt.datetime:
     with open(path, 'rb') as img_file:
         image = exif.Image(img_file)
-    if not image.has_exif or not image.datetime:
+    if not image.has_exif or 'datetime' not in dir(image):
+        print(f"image '{image}' has no datetime")
         return None
-    date, time = image.datetime.split(" ")
-    date = date.replace(':', '-')
-    isotime = '-'.join([date, time])
-    return dt.datetime.fromtimestamp(isotime)
+    return dt.datetime.strptime(image.datetime, '%Y:%m:%d %H:%M:%S')
 
 def create_filename(old_filename: str, time: dt.datetime, config: {}) -> str:
     old_name, extension = os.path.splitext(old_filename)
@@ -120,13 +118,12 @@ def get_files_recurse(dir: str, extensions: List[str]) -> List[str]:
 
     return files
 
-
 if __name__ == "__main__":
     config = {
         'prepend_timestamp': 'true',
         'keep_filename' : 'false',
-        'target_dir' : '',
-        'source_dir' : '',
+        'target_dir' : 'c:/users/hen/pictures/',
+        'source_dir' : 'c:/users/hen/pictures/Neuer Ordner',
         'extensions' : ['.jpg', '.jpeg', '.JPG', '.JPEG']}
 
     files = get_files_recurse(config.get('source_dir', ''), config.get('extensions', []))
@@ -138,15 +135,15 @@ if __name__ == "__main__":
 
         target_name = create_filename(os.path.basename(source), time, config)
         target_dir = create_target_dir_name(time, [], config)
-        target_dir = os.path.join(config['target_path'], target_dir)
         if not os.path.exists(target_dir):
             os.mkdir(target_dir)
 
         target = os.path.join(target_dir, target_name)
         if os.path.exists(target):
+            print(f"skipping file '{source}': file exists in target folder'")
             continue
 
-        shutil.copy(source, target)
+        shutil.move(source, target)
 
 
 
