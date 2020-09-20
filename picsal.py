@@ -138,6 +138,7 @@ def move(target: str, source:str) -> None:
             target = increment_filename(target)
             
     shutil.move(source, target)
+    
 
 if __name__ == "__main__":
     config = {
