@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 from typing import Dict, List
+import config
 
 class TimeRange:
     __start: dt.datetime
@@ -60,7 +61,7 @@ def get_exif_datetime(path: str) -> dt.datetime:
     with open(path, 'rb') as img_file:
         image = exif.Image(img_file)
     if not image.has_exif or 'datetime' not in dir(image):
-        print(f"image '{image}' has no datetime")
+        print(f"image '{path}' has no datetime")
         return None
     return dt.datetime.strptime(image.datetime, '%Y:%m:%d %H:%M:%S')
 
@@ -84,7 +85,7 @@ def create_filename(old_filename: str, time: dt.datetime, config: {}) -> str:
 
 def increment_filename(filename: str) -> str:
     name, extension = os.path.splitext(filename)
-    count = re.findall('.*_([0-9]+)', name)
+    count = re.findall('.*_([0-9]+)$', name)
     if count:
         number = int(count[0]) + 1
         return name[:-len(count[0])] + "{:02}".format(number) + extension
@@ -129,36 +130,36 @@ def get_files_recurse(dir: str, extensions: List[str]) -> List[str]:
 
     return files
 
-def move(target: str, source:str) -> None:
+def move(target: str, source:str, copy) -> None:
     while os.path.exists(target):
         if filecmp.cmp(target, source):
             print(f"skipping file '{source}': file exists in target folder'")
-            break
+            return
         else:
             target = increment_filename(target)
-            
-    shutil.move(source, target)
+    
+    if copy:
+        shutil.copy2(source, target)
+    else:
+        shutil.move(source, target)
     
 
 if __name__ == "__main__":
-    config = {
-        'prepend_timestamp': 'true',
-        'keep_filename' : 'false',
-        'target_dir' : 'c:/users/hen/pictures/',
-        'source_dir' : 'c:/users/hen/pictures/Neuer Ordner',
-        'extensions' : ['.jpg', '.jpeg', '.JPG', '.JPEG']}
 
-    files = get_files_recurse(config.get('source_dir', ''), config.get('extensions', []))
+    conf = config.init_config()
+    
+    files = get_files_recurse(conf.get('source_dir', ''), conf.get('extensions', []))
 
     for source in files:
         time: dt.datetime = (
             get_exif_datetime(source) or 
             dt.datetime.fromtimestamp(os.path.getctime(source)))
 
-        target_name = create_filename(os.path.basename(source), time, config)
-        target_dir = create_target_dir_name(time, [], config)
+        target_name = create_filename(os.path.basename(source), time, conf)
+        target_dir = create_target_dir_name(time, [], conf)
         if not os.path.exists(target_dir):
             os.mkdir(target_dir)
 
         target = os.path.join(target_dir, target_name)
-        move(target, source)
+        copy = conf.get('copy', False)
+        move(target, source, copy)
