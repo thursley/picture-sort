@@ -2,6 +2,8 @@ import unittest
 import picsal
 import datetime as dt
 import os
+from typing import Dict, List
+
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -53,6 +55,16 @@ class TestPicsal(unittest.TestCase):
         self.assertRaises(Exception, picsal.get_files, 'directory', config_a)
         self.assertRaises(Exception, picsal.get_files, '', config_a)
         self.assertRaises(Exception, picsal.get_files, f'{dir_path}/testdir', config_none)
+
+    def test_incremet_filename(self):
+        teststrings: List((str,str))= [
+            ("a/b/c.se","a/b/c_00.se"),
+            ("a/b/c_00.se","a/b/c_01.se"),
+            ("a/b/c_28.se","a/b/c_29.se"),
+            ("a/b/c_99.se","a/b/c_100.se"),
+        ]
+        for test in teststrings:
+            self.assertEqual(picsal.increment_filename(test[0]), test[1])
 
 class TestFile(unittest.TestCase):
 

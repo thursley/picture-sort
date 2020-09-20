@@ -1,6 +1,8 @@
 import exif
+import filecmp
 import datetime as dt
 import os
+import re
 import shutil
 from typing import Dict, List
 
@@ -80,6 +82,15 @@ def create_filename(old_filename: str, time: dt.datetime, config: {}) -> str:
     filename += extension
     return filename
 
+def increment_filename(filename: str) -> str:
+    name, extension = os.path.splitext(filename)
+    count = re.findall('.*_([0-9]+)', name)
+    if count:
+        number = int(count[0]) + 1
+        return name[:-len(count[0])] + "{:02}".format(number) + extension
+    else:
+        return f'{name}_00{extension}'
+
 def get_files(directory: str, config: {}) -> List[str]:
     if not os.path.isdir(directory):
         raise Exception(f'{directory} is not a directory.')
@@ -118,6 +129,17 @@ def get_files_recurse(dir: str, extensions: List[str]) -> List[str]:
 
     return files
 
+def move(target: str, source:str) -> None:
+    while os.path.exists(target):
+        if filecmp.cmp(target, source):
+            print(f"skipping file '{source}': file exists in target folder'")
+            break
+        else:
+            target = increment_filename(target)
+            
+    shutil.move(source, target)
+
+
 if __name__ == "__main__":
     config = {
         'prepend_timestamp': 'true',
@@ -139,11 +161,9 @@ if __name__ == "__main__":
             os.mkdir(target_dir)
 
         target = os.path.join(target_dir, target_name)
-        if os.path.exists(target):
-            print(f"skipping file '{source}': file exists in target folder'")
-            continue
+        move(target, source)
 
-        shutil.move(source, target)
+       
 
 
 
