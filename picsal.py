@@ -139,7 +139,6 @@ def move(target: str, source:str) -> None:
             
     shutil.move(source, target)
 
-
 if __name__ == "__main__":
     config = {
         'prepend_timestamp': 'true',
@@ -162,14 +161,3 @@ if __name__ == "__main__":
 
         target = os.path.join(target_dir, target_name)
         move(target, source)
-
-       
-
-
-
-
-
-        
-
-    
-
