@@ -40,15 +40,15 @@ class TestPicsal(unittest.TestCase):
         config_c = {'extensions': ['.c']}
         config_none = {}
 
-        self.assertEqual(
+        self.assertCountEqual(
             picsal.get_files(f'{dir_path}/testdir', config_a),
             ['a.a', 'b.a', 'c.a'])
 
-        self.assertEqual(
+        self.assertCountEqual(
             picsal.get_files(f'{dir_path}/testdir', config_ab),
             ['a.a', 'b.a', 'b.b', 'c.a', 'c.b'])
 
-        self.assertEqual(
+        self.assertCountEqual(
             picsal.get_files(f'{dir_path}/testdir', config_c),
             [])
 
@@ -63,6 +63,7 @@ class TestPicsal(unittest.TestCase):
             ("a/b/c_28.se","a/b/c_29.se"),
             ("a/b/c_99.se","a/b/c_100.se"),
         ]
+        
         for test in teststrings:
             self.assertEqual(picsal.increment_filename(test[0]), test[1])
 
@@ -84,7 +85,9 @@ class TestFile(unittest.TestCase):
         date = dt.datetime.today()
 
         f = picsal.File(path, name, date)
-        self.assertEqual(f.get_date(), dt.datetime.today())
+        self.assertEqual(
+            f.get_date().replace(microsecond=0), 
+            dt.datetime.today().replace(microsecond=0))
 
 class TestTimeRange(unittest.TestCase):
 
