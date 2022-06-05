@@ -63,7 +63,7 @@ def init_config() -> {}:
         config['target_dir'] = read_target_dir()
 
     config['keep_filename'] = read_yes_or_no("do you want to keep the filename?")
-    config['prepend_timestamp'] = read_yes_or_no("dou you want to prepend the timestamp?")
+    config['prepend_timestamp'] = read_yes_or_no("do you want to prepend the timestamp?")
     config['copy'] = read_yes_or_no("copy files instead of moving?")
 
     if read_yes_or_no("store config?"):
