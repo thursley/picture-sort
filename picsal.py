@@ -132,7 +132,7 @@ def get_files_recurse(dir: str, extensions: List[str]) -> List[str]:
 
 def move(target: str, source:str, copy) -> None:
     while os.path.exists(target):
-        if filecmp.cmp(target, source):
+        if filecmp.cmp(target, source, shallow=False):
             print(f"skipping file '{source}': file exists in target folder'")
             return
         else:
